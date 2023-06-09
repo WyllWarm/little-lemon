@@ -1,284 +1,272 @@
-package com.example.littlelemon.navigation
+package com.example.littlelemon
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.*
-import androidx.compose.material3.MaterialTheme.typography
-import androidx.compose.runtime.*
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.*
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import com.example.littlelemon.R
-import com.example.littlelemon.data.MenuItemRoom
-import com.example.littlelemon.data.MyViewModel
-import com.example.littlelemon.ui.theme.LittleLemonColor
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
-
+import com.example.littlelemon.ui.theme.LittleLemonColor
+import java.util.Locale
 
 
 @Composable
-fun Home(navController: NavHostController) {
+fun Home(
+    navController: NavHostController,
+    viewModel: List<MenuItemEntity>,
+    searchPhrase: String,
+    onSearchPhraseChange: (String) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
 
-    val viewModel: MyViewModel = viewModel()
-    val databaseMenuItems = viewModel.getAllDatabaseMenuItems().observeAsState(emptyList()).value
-    val searchPhrase = remember {
-        mutableStateOf("")
-    }
-
-    LaunchedEffect(Unit) {
-        viewModel.fetchMenuDataIfNeeded()
-    }
-
-
-
-    Column() {
-        Header(navController)
-        UpperPanel(){
-            searchPhrase.value = it
-        }
-        LowerPanel(databaseMenuItems, searchPhrase)
-    }
-
-
-}
-
-@Composable
-fun Header(navController: NavHostController){
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 10.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween) {
-        Spacer(modifier = Modifier.width(50.dp))
-        Image(painter = painterResource(id = R.drawable.logo),
-            contentDescription = "Little Lemon Logo",
-            modifier = Modifier
-                .fillMaxWidth(0.65f))
-
-        Box(modifier = Modifier
-            .size(50.dp)
-            .clickable { navController.navigate(Profile.route) }){
-            Icon(
-                imageVector = Icons.Default.AccountCircle,
-                contentDescription = "Profile Icon",
-                tint = LittleLemonColor.green,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(vertical = 2.dp))
-        }
-
-
-    }
-}
-
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun UpperPanel(search : (parameter: String)-> Unit) {
-    val searchPhrase = remember {
-        mutableStateOf("")
-    }
-
-    Log.d("", "UpperPanel: ${searchPhrase.value}")
-    Column(modifier = Modifier
-        .background(LittleLemonColor.green)
-        .padding(horizontal = 20.dp, vertical = 10.dp)) {
-        Text(text = "Little Lemon", style = typography.headlineMedium, color = LittleLemonColor.yellow)
-        Text(text = "New York", style = typography.headlineMedium, color = LittleLemonColor.cloud)
         Row(
-            Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(text = "We are a family owned Mediterranean restaurant, focused on traditional recipes served with  a modern twist. Turkish, Italian, Indian and chinese recipes are our speciality.",
-                modifier = Modifier.fillMaxWidth(0.7f),
-                color = Color.White,
-                style = typography.bodyMedium)
-            Image(
-                painter = painterResource(id = R.drawable.hero_image),
-                contentDescription = "Hero Image",
-                modifier = Modifier
-                    .clip(RoundedCornerShape(16.dp))
-            )
-        }
-
-        Spacer(modifier = Modifier.size(10.dp))
-        OutlinedTextField(value = searchPhrase.value,
-            onValueChange = {
-                searchPhrase.value = it
-                search(searchPhrase.value)
-            },
-            placeholder = {
-                Text(text = "Enter Search Phrase")
-            },
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = "Search Icon")
-            },
-            modifier = Modifier.fillMaxWidth())
-
-    }
-
-}
-@Composable
-fun LowerPanel(databaseMenuItems: List<MenuItemRoom>, search: MutableState<String>) {
-    val categories = databaseMenuItems.map {
-        it.category.replaceFirstChar {character ->
-            character.uppercase()
-        }
-    }.toSet()
-
-
-    val selectedCategory = remember {
-        mutableStateOf("")
-    }
-
-
-    val items = if(search.value == ""){
-        databaseMenuItems
-
-    }
-    else{
-        databaseMenuItems.filter {
-            it.title.contains(search.value, ignoreCase = true)
-
-        }
-
-
-    }
-
-
-
-    val filteredItems = if(selectedCategory.value == "" || selectedCategory.value == "all"){
-        items
-    }
-    else{
-        items.filter {
-            it.category.contains(selectedCategory.value, ignoreCase = true)
-        }
-    }
-
-
-    Column {
-        MenuCategories(categories) {selectedCategory.value = it
-        }
-        Spacer(modifier = Modifier.size(2.dp))
-        Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-            for (item in filteredItems){
-                MenuItem(item = item)
-            }
-        }
-
-    }
-}
-
-
-@Composable
-fun MenuCategories(categories: Set<String>, categoryLambda : (sel: String) -> Unit) {
-    val cat = remember {
-        mutableStateOf("")
-    }
-
-    Card(modifier = Modifier.fillMaxWidth()) {
-
-        Column(Modifier.padding(horizontal = 20.dp, vertical = 10.dp)) {
-            Text(text = "ORDER FOR DELIVERY", fontWeight = FontWeight.Bold)
-
-            Row(modifier = Modifier
-                .horizontalScroll(rememberScrollState())
-                .padding(top = 10.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-
-                CategoryButton(category = "All"){
-                    cat.value = it.lowercase()
-                    categoryLambda(it.lowercase())
-                }
-
-                for (category in categories){
-                    CategoryButton(category = category){
-                        cat.value = it
-                        categoryLambda(it)
-                    }
-
-                }
-
-            }
-        }
-    }
-}
-
-@Composable
-fun CategoryButton(category:String, selectedCategory: (sel: String) -> Unit) {
-    val isClicked = remember{
-        mutableStateOf(false)
-    }
-    Button(onClick = {
-        isClicked.value = !isClicked.value
-        selectedCategory(category)
-
-    },
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxWidth()
+                .padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-        Text(text = category)
+            Spacer(modifier = Modifier.fillMaxWidth(0.05F))
+            Image(
+                painter = painterResource(id = R.drawable.logo),
+                contentDescription = "Little Lemon Logo",
+                modifier = Modifier
+                    .fillMaxWidth(0.5F)
+                    .padding(horizontal = 20.dp)
+            )
+            IconButton(
+                onClick = {
+                    navController.navigate(Destinations.Profile)
+                },
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.profile),
+                    contentDescription = "Profile",
+                    modifier = Modifier
+                        .size(30.dp)
+                        .clip(RoundedCornerShape(20.dp))
+
+                )
+            }
+        }
+        Column(
+            modifier = Modifier
+                .background(LittleLemonColor.green)
+        ) {
+            Column(
+                modifier = Modifier.padding(10.dp)
+            ) {
+                Text(
+                    text = stringResource(id = R.string.title),
+                    fontSize = 40.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = LittleLemonColor.yellow
+                )
+                Text(
+                    text = stringResource(id = R.string.location),
+                    fontSize = 24.sp,
+                    color = LittleLemonColor.cloud
+                )
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier
+                        .padding(top = 20.dp)
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.description),
+                        style = MaterialTheme.typography.body1,
+                        modifier = Modifier
+                            .padding(bottom = 28.dp, end = 20.dp)
+                            .fillMaxWidth(0.6f),
+                        color = LittleLemonColor.cloud
+                    )
+                    Image(
+                        painter = painterResource(id = R.drawable.hero_image),
+                        contentDescription = "Upper Panel Image",
+                        modifier = Modifier.clip(RoundedCornerShape(10.dp))
+                    )
+                }
+            }
+            Column(
+                modifier = Modifier
+                    .padding(10.dp)
+                    .clip(RoundedCornerShape(7.dp))
+            ) {
+                TextField(
+                    value = searchPhrase,
+                    onValueChange = onSearchPhraseChange,
+                    label = { Text("Enter search phrase") },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = ""
+                        )
+                    },
+                    singleLine = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(LittleLemonColor.gray)
+                )
+            }
+        }
+
+
+        val categoriesSet = remember { mutableStateOf<Set<String>>(emptySet()) }
+
+        val categories = mutableListOf("all")
+
+        categoriesSet.value = viewModel.map { it.category }.toSet()
+
+        categories.addAll(categoriesSet.value)
+
+
+        val selectedCategory = remember { mutableStateOf("") }
+
+        Row(modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 16.dp)) {
+            Text(text = "Order for Delivery",
+                color = LittleLemonColor.charcoal,
+                fontWeight = FontWeight.Bold,
+                fontSize = 22.sp,
+                modifier = Modifier.padding(horizontal = 16.dp)
+                )
+
+        }
+
+        LazyRow {
+            items(categories) { category ->
+                Button(
+                    onClick = {
+                        if (category === "all") {
+                            selectedCategory.value = ""
+                        } else if (category === selectedCategory.value) {
+                            selectedCategory.value = ""
+                        } else {
+                            selectedCategory.value = category
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        backgroundColor =
+                        if (category === "all" && selectedCategory.value === "") {
+                            LittleLemonColor.green
+                        } else if (category === selectedCategory.value) {
+                            LittleLemonColor.green
+                        } else {
+                            LittleLemonColor.cloud
+                        }
+                    ),
+                    shape = RoundedCornerShape(50),
+                    modifier = Modifier.padding(6.dp)
+
+                ) {
+                    Text(
+                        text = category.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() },
+                        color =
+                        if (category === "all" && selectedCategory.value === "") {
+                            LittleLemonColor.cloud
+                        } else if (category === selectedCategory.value) {
+                            LittleLemonColor.cloud
+                        } else {
+                            LittleLemonColor.green
+                        }
+                    )
+
+                }
+            }
+        }
+
+
+        MenuItems(viewModel.filter { menuItem ->
+            (selectedCategory.value.isEmpty() || menuItem.category == selectedCategory.value) &&
+                    (searchPhrase.isEmpty() || menuItem.title.contains(
+                        searchPhrase,
+                        ignoreCase = true
+                    ))
+        })
+
+    }
+}
+
+
+@Composable
+fun MenuItems(itemsList: List<MenuItemEntity>) {
+    LazyColumn {
+        items(itemsList) { menuItem ->
+            MenuItem(menuItem = menuItem)
+        }
     }
 }
 
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
-fun MenuItem(item: MenuItemRoom) {
-
-    val itemDescription = if(item.description.length>100) {
-        item.description.substring(0,100) + ". . ."
-    }
-    else{
-        item.description
-    }
-
-    Card(
-        modifier = Modifier
-            .clickable {}) {
+fun MenuItem(menuItem: MenuItemEntity) {
+    Card {
         Row(
-            Modifier
+            modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 10.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.fillMaxWidth(0.7f),
-                verticalArrangement = Arrangement.SpaceBetween) {
-                Text(text = item.title, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 10.dp))
-                Text(text = itemDescription, modifier = Modifier.padding(bottom = 10.dp))
-                Text(text = "$ ${item.price}", fontWeight = FontWeight.Bold)
+                .padding(8.dp),
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(start = 10.dp)
+                    .fillMaxWidth(0.6f)
+            ) {
+                Text(
+                    text = menuItem.title,
+                    style = MaterialTheme.typography.h6,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Text(
+                    text = menuItem.description,
+                    style = MaterialTheme.typography.body1,
+                    modifier = Modifier
+                        .fillMaxWidth(0.95f)
+                        .padding(top = 5.dp, bottom = 5.dp)
+                )
+                Text(
+                    text = "$${menuItem.price}",
+                    style = MaterialTheme.typography.h6,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )}
+                Column(modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.Center) {
 
-            }
 
-            GlideImage(model = item.imageUrl,
-                contentDescription = "",
-                Modifier.size(100.dp, 100.dp),
-                contentScale = ContentScale.Crop)
+                    GlideImage(
+                        model = menuItem.image,
+                        contentDescription = "Menu item image",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 5.dp)
+
+                    )
+                }
+
         }
     }
-
+    Divider(
+        modifier = Modifier.padding(start = 8.dp, end = 8.dp),
+        thickness = 1.dp,
+        color = LittleLemonColor.yellow
+    )
 }
