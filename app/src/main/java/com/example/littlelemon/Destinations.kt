@@ -1,17 +1,7 @@
-package com.example.littlelemon.navigation
+package com.example.littlelemon
 
-interface Destinations{
-    val route: String
-}
-
-object Onboarding: Destinations {
-    override val route = "Onboarding"
-}
-
-object Home: Destinations {
-    override val route = "Home"
-}
-
-object Profile: Destinations {
-    override val route = "Profile"
+object Destinations {
+    const val Onboarding = "Onboarding"
+    const val Home = "Home"
+    const val Profile = "Profile"
 }

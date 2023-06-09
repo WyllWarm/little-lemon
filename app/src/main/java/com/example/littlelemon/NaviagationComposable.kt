@@ -1,29 +1,22 @@
-package com.example.littlelemon.navigation
+package com.example.littlelemon
 
-import android.content.Context
 import androidx.compose.runtime.Composable
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 
 @Composable
-fun NavigationComposable(context: Context, navController: NavHostController) {
-    val sharedPreferences = context.getSharedPreferences("Little Lemon", Context.MODE_PRIVATE)
-    var startDestination = Onboarding.route
-
-    if (sharedPreferences.getBoolean("userRegistered", false)) {
-        startDestination = Home.route
-    }
-
-    NavHost(navController = navController, startDestination = startDestination){
-        composable(Onboarding.route){
-            Onboarding(context, navController)
+fun NavigationComposable(viewModel: List<MenuItemEntity>, searchPhrase: String, onSearchPhraseChange: (String) -> Unit) {
+    val navController = rememberNavController()
+    NavHost(navController = navController, startDestination = Destinations.Onboarding) {
+        composable(Destinations.Onboarding) {
+            Onboarding(navController)
         }
-        composable(Home.route){
-            Home(navController)
+        composable(Destinations.Home) {
+            Home(navController, viewModel, searchPhrase, onSearchPhraseChange)
         }
-        composable(Profile.route){
-            Profile(context, navController)
+        composable(Destinations.Profile) {
+            Profile(navController)
         }
     }
 }
